@@ -4,6 +4,28 @@ window.ss = window.ss || {};
 
 const $ = window.jQuery;
 
+const getFormJQuery = () => {
+  const globalJQ = window.jQuery;
+  const hasGlobalAjaxSubmit = !!(
+    globalJQ
+    && globalJQ.fn
+    && globalJQ.fn.ajaxSubmit
+  );
+
+  if (hasGlobalAjaxSubmit && !$.fn.ajaxSubmit) {
+    $.fn.ajaxSubmit = globalJQ.fn.ajaxSubmit;
+
+    if (globalJQ.fn.ajaxForm && !$.fn.ajaxForm) {
+      $.fn.ajaxForm = globalJQ.fn.ajaxForm;
+    }
+    if (globalJQ.fn.formToArray && !$.fn.formToArray) {
+      $.fn.formToArray = globalJQ.fn.formToArray;
+    }
+  }
+
+  return $.fn.ajaxSubmit ? $ : globalJQ;
+};
+
 
 $.entwine('ss', () => {
   $('input.link').entwine({
@@ -66,7 +88,7 @@ $.entwine('ss', () => {
           }
         };
 
-        $(this).ajaxSubmit(options);
+        getFormJQuery()(this).ajaxSubmit(options);
 
         return false;
       });
