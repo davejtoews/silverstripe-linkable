@@ -1,9 +1,11 @@
-import $ from 'jquery';
+/* global window */
 
 window.ss = window.ss || {};
 
+const $ = window.jQuery;
 
-$.entwine('ss', ($) => {
+
+$.entwine('ss', () => {
   $('input.link').entwine({
     Loading: null,
     Dialog: null,
@@ -31,7 +33,7 @@ $.entwine('ss', ($) => {
       // add extra query params if provided
       const extraQuery = self.data('extra-query');
       if (typeof extraQuery !== 'undefined') {
-          url = `${url}${extraQuery}`;
+        url = `${url}${extraQuery}`;
       }
 
       this.setURL(url);

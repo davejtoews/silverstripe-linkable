@@ -1,9 +1,11 @@
-import $ from 'jquery';
+/* global window */
 
 window.ss = window.ss || {};
 
+const $ = window.jQuery;
 
-$.entwine('ss', ($) => {
+
+$.entwine('ss', () => {
   $('.embeddedObjectLoad').entwine({
     onclick() {
       const params = {
