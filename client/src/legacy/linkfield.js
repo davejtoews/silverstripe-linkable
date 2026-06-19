@@ -4,26 +4,46 @@ window.ss = window.ss || {};
 
 const $ = window.jQuery;
 
-const getFormJQuery = () => {
-  const globalJQ = window.jQuery;
-  const hasGlobalAjaxSubmit = !!(
-    globalJQ
-    && globalJQ.fn
-    && globalJQ.fn.ajaxSubmit
-  );
-
-  if (hasGlobalAjaxSubmit && !$.fn.ajaxSubmit) {
-    $.fn.ajaxSubmit = globalJQ.fn.ajaxSubmit;
-
-    if (globalJQ.fn.ajaxForm && !$.fn.ajaxForm) {
-      $.fn.ajaxForm = globalJQ.fn.ajaxForm;
-    }
-    if (globalJQ.fn.formToArray && !$.fn.formToArray) {
-      $.fn.formToArray = globalJQ.fn.formToArray;
-    }
+const submitForm = ($form, options) => {
+  if ($.fn && typeof $.fn.ajaxSubmit === 'function') {
+    $form.ajaxSubmit(options);
+    return;
   }
 
-  return $.fn.ajaxSubmit ? $ : globalJQ;
+  const opts = options || {};
+  const method = ($form.attr('method') || 'POST').toUpperCase();
+  const action = $form.attr('action') || window.location.href;
+  const data = $form.serializeArray();
+  const clicked = $form.data('linkfieldClickedSubmit');
+
+  if (clicked && clicked.name) {
+    data.push({
+      name: clicked.name,
+      value: clicked.value || ''
+    });
+  }
+
+  $.ajax({
+    url: action,
+    type: method,
+    data: $.param(data),
+    success(response, textStatus, xhr) {
+      if (typeof opts.success === 'function') {
+        opts.success(response, textStatus, xhr, $form);
+      }
+    },
+    error(xhr, textStatus, errorThrown) {
+      if (typeof opts.error === 'function') {
+        opts.error(xhr, textStatus, errorThrown, $form);
+      }
+    },
+    complete(xhr, textStatus) {
+      if (typeof opts.complete === 'function') {
+        opts.complete(xhr, textStatus, $form);
+      }
+      $form.removeData('linkfieldClickedSubmit');
+    }
+  });
 };
 
 
@@ -73,6 +93,13 @@ $.entwine('ss', () => {
       // submit button loading state while form is submitting
       this.getDialog().on('click', 'button', function () {
         $(this).addClass('loading ui-state-disabled');
+
+        if (this.form) {
+          $(this.form).data('linkfieldClickedSubmit', {
+            name: this.name,
+            value: this.value
+          });
+        }
       });
 
       // handle dialog form submission
@@ -88,7 +115,7 @@ $.entwine('ss', () => {
           }
         };
 
-        getFormJQuery()(this).ajaxSubmit(options);
+        submitForm($(this), options);
 
         return false;
       });
